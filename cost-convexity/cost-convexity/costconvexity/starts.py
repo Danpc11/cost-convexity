@@ -69,7 +69,12 @@ def swap_descent(H, n, rng, sweeps=None):
     """
     H = nx.Graph(H)
     A = mean_resistance_unweighted(H, n)
-    tries = sweeps if sweeps is not None else min(20 * H.number_of_edges(), 6000)
+    if sweeps is not None:
+        tries = sweeps
+    else:
+        # each proposal costs one O(n^3) eigendecomposition, so the budget shrinks with n
+        cap = 6000 if n <= 128 else 1500 if n <= 256 else 300 if n <= 512 else 60
+        tries = min(20 * H.number_of_edges(), cap)
     edges = list(H.edges())
     for _ in range(tries):
         i, j = rng.choice(len(edges), 2, replace=False)

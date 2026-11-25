@@ -1,0 +1,20 @@
+{
+ "alpha_star": 0.28,
+ "bracketed": true,
+ "alpha_first_looped": 0.3,
+ "active_above": 29,
+ "beta_above": 5,
+ "mean_degree_above": 2.32,
+ "winner_above": "continuation",
+ "reentrant_loops_below": false,
+ "tree_steps_below": 4,
+ "graph": "square:5",
+ "load": "iso",
+ "n": 25,
+ "m": 40,
+ "step": 0.02,
+ "n_random": 24,
+ "seed": 7,
+ "looped": true,
+ "upward": true
+}

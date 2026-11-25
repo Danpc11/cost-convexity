@@ -36,7 +36,7 @@ def make_problem(graph_spec, load_spec, alpha):
 def sweep(graph_spec, load_spec="iso", amax=0.75, amin=0.30, step=0.005,
           n_random=24, seed=7, confirm=4, looped=True, looped_samples=40,
           workers=1, outdir="results", tag=None, verbose=True, upward=True,
-          max_passes=6):
+          max_passes=6, grid=None):
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     tag = tag or f"{graph_spec}__{load_spec}".replace(":", "-")
@@ -50,7 +50,8 @@ def sweep(graph_spec, load_spec="iso", amax=0.75, amin=0.30, step=0.005,
     else:
         lstarts, llabels = [], []
 
-    grid = np.round(np.arange(amax, amin - 1e-9, -step), 6)
+    grid = (np.round(np.arange(amax, amin - 1e-9, -step), 6) if grid is None
+            else np.sort(np.asarray(grid, float))[::-1])
     rows, shares = [], {}
     carry = None
     trees_seen = 0
