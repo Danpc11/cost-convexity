@@ -29,10 +29,12 @@ ap.add_argument("--looped-samples", type=int, default=40)
 ap.add_argument("--no-looped", action="store_true")
 ap.add_argument("--no-upward", action="store_true")
 ap.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")))
+ap.add_argument("--grid", default=None, help="comma-separated exponents (overrides amax/amin/step)")
 ap.add_argument("--out", default="results")
 ap.add_argument("--tag", default=None)
 a = ap.parse_args()
 
 sweep.sweep(a.graph, a.load, a.amax, a.amin, a.step, a.n_random, a.seed, a.confirm,
             looped=not a.no_looped, looped_samples=a.looped_samples, workers=a.workers,
-            outdir=a.out, tag=a.tag, upward=not a.no_upward)
+            outdir=a.out, tag=a.tag, upward=not a.no_upward,
+            grid=None if a.grid is None else [float(x) for x in a.grid.split(",")])

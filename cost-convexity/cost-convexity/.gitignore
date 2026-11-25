@@ -1,7 +1,0 @@
-__pycache__/
-*.pyc
-.mpl_cache/
-.cache/
-logs/
-results/pre_results/
-.ipynb_checkpoints/

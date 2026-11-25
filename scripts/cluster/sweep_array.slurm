@@ -2,8 +2,8 @@
 # SLURM array over the lines of scripts/cluster/jobs.txt.
 #
 #   cd cost-convexity
-#   python scripts/make_jobs.py                     # writes scripts/cluster/jobs.txt
-#   N=$(wc -l < scripts/cluster/jobs.txt)
+#   python scripts/make_jobs.py                     # writes scripts/cluster/jobs.tsv
+#   N=$(( $(wc -l < scripts/cluster/jobs.tsv) - 1 ))
 #   sbatch --array=1-${N}%20 scripts/cluster/sweep_array.slurm
 #
 # Test first with a cheap slice, e.g. --array=1-3 (complete graph, n = 8, 12, 16).
@@ -25,7 +25,7 @@ mkdir -p logs
 # -----------------------------------------------------------------------------
 
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" scripts/cluster/jobs.txt)
+CMD=$(awk -F'\t' -v i=$((SLURM_ARRAY_TASK_ID+1)) 'NR==i{print $5}' scripts/cluster/jobs.tsv)
 echo "[$(date)] task ${SLURM_ARRAY_TASK_ID} on $(hostname): ${CMD}"
-eval "${CMD} --workers ${SLURM_CPUS_PER_TASK}"
+eval "${CMD}"
 echo "[$(date)] done"
