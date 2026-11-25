@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "costconvexity"
+version = "2.0.0"
+description = "Resistance-optimal networks under power-law resource costs"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0", "scipy>=1.14", "networkx>=3.3", "pandas>=2.2", "matplotlib>=3.9"]
+license = {text = "MIT"}
+
+[tool.setuptools]
+packages = ["costconvexity"]

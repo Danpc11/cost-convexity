@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the article and this repository."
+title: "cost-convexity: code for 'Cost convexity controls the architecture of resistance-optimal networks'"
+version: 2.0.0
+license: MIT
+repository-code: "https://github.com/Danpc11/cost-convexity"
+authors:
+  - family-names: Tovar
+    given-names: Hugo
+  - family-names: Vázquez-Victorio
+    given-names: Genaro
+  - family-names: Hernández-Lemus
+    given-names: Enrique
+  - family-names: Cervera
+    given-names: Alejandra
+  - family-names: Pérez-Calixto
+    given-names: Daniel
