@@ -37,7 +37,7 @@ from scipy.optimize import minimize
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 
-PENALTY = 1e25
+PENALTY = 1e300     # must exceed any feasible objective; at alpha ~ 0.05 these reach 1e30 and more
 BARRIER = 1e12
 LOGIT_BOUNDS = (-25.0, 5.0)
 DEFAULT_CUT = 1e-5
@@ -114,8 +114,17 @@ class Problem:
             return None
         if not self.support_connected(w):
             return None
+        # The objective is homogeneous, L(c w) = c L(w), so the spectrum is computed
+        # for w / max(w) and rescaled. Without this, at small alpha every
+        # conductance is far below one (w = p^(1/alpha)), the whole spectrum falls
+        # under the singularity floor, and every state is wrongly rejected. With
+        # max(w) >= 1 the rule is the version-1 rule unchanged.
+        wmax = float(w.max(initial=0.0))
+        if wmax <= 0.0:
+            return None
+        scale = min(wmax, 1.0)
         with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
-            L = self.laplacian(w)
+            L = self.laplacian(w / scale)
             if not np.all(np.isfinite(L)):
                 return None
             try:
@@ -126,7 +135,7 @@ class Problem:
                 return None
             if vals[1] <= rel_tol * max(float(vals[-1]), 1.0):
                 return None
-        return vals[1:], vecs[:, 1:]
+        return vals[1:] * scale, vecs[:, 1:]
 
     def value_grad(self, w):
         """F(w) and dF/dw. Infeasible points return (PENALTY, barrier direction)."""
@@ -221,7 +230,7 @@ def refine_support(prob, p_full, cut=DEFAULT_CUT):
         res_x, nit = res.x, int(res.nit)
         value, gradient = f_reduced(res.x)
         grad_inf = float(np.max(np.abs(gradient), initial=0.0))
-        ok = bool(np.isfinite(value) and value < 1e25 and (res.success or grad_inf < 1e-5))
+        ok = bool(np.isfinite(value) and value < PENALTY and (res.success or grad_inf < 1e-5))
     q, w = unpack_reduced(res_x)
     full_p = np.zeros(prob.m)
     full_w = np.zeros(prob.m)
@@ -261,7 +270,7 @@ def descend(prob, z0, cut=DEFAULT_CUT, prune=None):
     projected[(res.x <= lo + 1e-7) & (gradient > 0)] = 0.0
     projected[(res.x >= hi - 1e-7) & (gradient < 0)] = 0.0
     return dict(value=float(value), p=p, w=w,
-                success=bool(res.success and np.isfinite(value) and value < 1e25),
+                success=bool(res.success and np.isfinite(value) and value < PENALTY),
                 projected_grad_inf=float(np.max(np.abs(projected))), nit=int(res.nit))
 
 
@@ -304,7 +313,7 @@ def multistart(prob, starts, labels=None, cut=DEFAULT_CUT, prune=None, workers=1
     else:
         outs = [_descend_job(j) for j in jobs]
     vals = np.array([o["value"] for o in outs])
-    if not np.any(np.isfinite(vals) & (vals < 1e25)):
+    if not np.any(np.isfinite(vals) & (vals < PENALTY)):
         raise RuntimeError("No finite state was obtained in the multistart search")
     k = int(np.argmin(vals))
     best = outs[k]
