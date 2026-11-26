@@ -86,12 +86,14 @@ for sigma in ("0.5", "1", "2"):          # sigma -> inf is mix:0 below
         add(3, topo_workers(L * L), (L * L / 64) ** 2.5, "E3", f"square:{L}",
             load=f"corson:{sigma}", amax=1.00, amin=0.08, step=0.01)
     for n in (8, 16, 24, 32, 48, 64, 96, 128):
-        add(3, topo_workers(n), kn_cost(n), "E3", f"complete:{n}", load=f"corson:{sigma}",
+        add(3, topo_workers(n), kn_cost(n) * 3, "E3", f"complete:{n}", load=f"corson:{sigma}",
             amax=1.00, amin=0.40, step=0.01)
 for lam in ("0", "0.25", "0.5", "0.75", "0.9", "0.99"):
     for n in (8, 16, 32, 64, 128):
-        add(3, topo_workers(n), kn_cost(n), "E3", f"complete:{n}", load=f"mix:{lam}",
-            amax=1.00, amin=0.40, step=0.01)
+        # alpha* <= 0.77 on K_n for every mixture; starting at 0.85 avoids the
+        # dense, slow states near alpha = 1 without losing the collapse
+        add(3, topo_workers(n), kn_cost(n) * 3, "E3", f"complete:{n}", load=f"mix:{lam}",
+            amax=0.85, amin=0.40, step=0.01)
     for L in (4, 6, 8, 12, 16):
         add(3, topo_workers(L * L), (L * L / 64) ** 2.5, "E3", f"square:{L}",
             load=f"mix:{lam}", amax=1.00, amin=0.08, step=0.01)

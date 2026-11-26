@@ -41,6 +41,7 @@ PENALTY = 1e300     # must exceed any feasible objective; at alpha ~ 0.05 these 
 BARRIER = 1e12
 LOGIT_BOUNDS = (-25.0, 5.0)
 DEFAULT_CUT = 1e-5
+DENSE_BFGS_MAX = 600   # largest support refined with dense BFGS
 
 
 # --------------------------------------------------------------------- problem
@@ -225,8 +226,17 @@ def refine_support(prob, p_full, cut=DEFAULT_CUT):
         res_x, nit, grad_inf, ok = np.zeros(0), 0, 0.0, np.isfinite(value)
     else:
         y0 = np.log(q0[:-1] / q0[-1])
-        res = minimize(f_reduced, y0, jac=True, method="BFGS",
-                       options={"maxiter": 3000, "gtol": 1e-8})
+        # Dense BFGS (version 1) keeps an m x m inverse Hessian. On supports of
+        # thousands of edges (dense states near alpha = 1 on large graphs) that is
+        # O(m^2) memory and work per iteration and dominates the run, so large
+        # supports are refined with limited-memory BFGS instead. Supports of up to
+        # DENSE_BFGS_MAX edges, which include every version-1 state, are unchanged.
+        if sub.m - 1 <= DENSE_BFGS_MAX:
+            res = minimize(f_reduced, y0, jac=True, method="BFGS",
+                           options={"maxiter": 3000, "gtol": 1e-8})
+        else:
+            res = minimize(f_reduced, y0, jac=True, method="L-BFGS-B",
+                           options={"maxiter": 3000, "gtol": 1e-8, "ftol": 1e-13})
         res_x, nit = res.x, int(res.nit)
         value, gradient = f_reduced(res.x)
         grad_inf = float(np.max(np.abs(gradient), initial=0.0))
